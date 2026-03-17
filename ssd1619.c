@@ -102,23 +102,41 @@ static esp_err_t ssd1619_write_lut(ssd1619_t* handle) {
     if (res != ESP_OK) {
         return res;
     }
-    res = ssd1619_send_data(handle, handle->lut, 70);
+
+    size_t lut_size = (handle->use_10_byte_lut ? sizeof(ssd1619_lut10_t) : sizeof(ssd1619_lut7_t));
+    res = ssd1619_send_data(handle, handle->lut, lut_size - 6); // Don't send the last 6 bytes (vgh, vsh1, vsh2, vsl, frame1, frame2) as they are set separately
     if (res != ESP_OK) {
         return res;
     }
-    res = ssd1619_set_gate_driving_voltage(handle, handle->lut[70]);
-    if (res != ESP_OK) {
-        return res;
+
+    uint8_t vgh = handle->use_10_byte_lut ? ((ssd1619_lut10_t*)handle->lut)->vgh : ((ssd1619_lut7_t*)handle->lut)->vgh;        // Gate level (0x03)
+    uint8_t vsh1 = handle->use_10_byte_lut ? ((ssd1619_lut10_t*)handle->lut)->vsh1 : ((ssd1619_lut7_t*)handle->lut)->vsh1;       // Source level (0x04)
+    uint8_t vsh2 = handle->use_10_byte_lut ? ((ssd1619_lut10_t*)handle->lut)->vsh2 : ((ssd1619_lut7_t*)handle->lut)->vsh2;       // Source level (0x04)
+    uint8_t vsl = handle->use_10_byte_lut ? ((ssd1619_lut10_t*)handle->lut)->vsl : ((ssd1619_lut7_t*)handle->lut)->vsl;        // Source level (0x04)
+    uint8_t frame1 = handle->use_10_byte_lut ? ((ssd1619_lut10_t*)handle->lut)->frame1 : ((ssd1619_lut7_t*)handle->lut)->frame1;     // Dummy line (0x3A)
+    uint8_t frame2 = handle->use_10_byte_lut ? ((ssd1619_lut10_t*)handle->lut)->frame2 : ((ssd1619_lut7_t*)handle->lut)->frame2;     // Gate line width (0x3B)
+
+    if (!handle->use_10_byte_lut) {
+        ESP_LOGI(TAG, "Using 7 byte LUT");
+    } else {
+        ESP_LOGI(TAG, "Using 10 byte LUT");
     }
-    res = ssd1619_set_source_driving_voltage(handle, handle->lut[71], handle->lut[72], handle->lut[73]);
-    if (res != ESP_OK) {
-        return res;
+
+    if (!handle->use_10_byte_lut) {
+        res = ssd1619_set_gate_driving_voltage(handle, vgh);
+        if (res != ESP_OK) {
+            return res;
+        }
+        res = ssd1619_set_source_driving_voltage(handle, vsh1, vsh2, vsl);
+        if (res != ESP_OK) {
+            return res;
+        }
+        res = ssd1619_set_dummy_line_period(handle, frame1);
+        if (res != ESP_OK) {
+            return res;
+        }
+        res = ssd1619_set_gate_line_width(handle, frame2);
     }
-    res = ssd1619_set_dummy_line_period(handle, handle->lut[74]);
-    if (res != ESP_OK) {
-        return res;
-    }
-    res = ssd1619_set_gate_line_width(handle, handle->lut[75]);
     return res;
 }
 

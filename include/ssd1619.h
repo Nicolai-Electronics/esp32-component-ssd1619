@@ -17,7 +17,8 @@ extern "C" {
 #include "stdbool.h"
 #include "stdint.h"
 
-#define SSD1619_LUT_SIZE 76
+#define SSD1619_LUT7_SIZE 76
+#define SSD1619_LUT10_SIZE 97
 
 #define SSD1619_CMD_DRIVER_OUTPUT_CONTROL          0x01
 #define SSD1619_CMD_GATE_DRIVING_VOLTAGE           0x03
@@ -87,7 +88,7 @@ typedef struct {
 } __attribute__((packed, aligned(1))) ssd1619_lut_group_t;
 
 typedef struct {
-    uint8_t             vs[35];     // Register 0x32
+    uint8_t             vs[5 * 7];     // Register 0x32
     ssd1619_lut_group_t groups[7];  // Register 0x32
     uint8_t             vgh;        // Gate level (0x03)
     uint8_t             vsh1;       // Source level (0x04)
@@ -96,6 +97,17 @@ typedef struct {
     uint8_t             frame1;     // Dummy line (0x3A)
     uint8_t             frame2;     // Gate line width (0x3B)
 } __attribute__((packed, aligned(1))) ssd1619_lut7_t;
+
+typedef struct {
+    uint8_t             vs[5 * 10];     // Register 0x32
+    ssd1619_lut_group_t groups[7];  // Register 0x32
+    uint8_t             vgh;        // Gate level (0x03)
+    uint8_t             vsh1;       // Source level (0x04)
+    uint8_t             vsh2;       // Source level (0x04)
+    uint8_t             vsl;        // Source level (0x04)
+    uint8_t             frame1;     // Dummy line (0x3A)
+    uint8_t             frame2;     // Gate line width (0x3B)
+} __attribute__((packed, aligned(1))) ssd1619_lut10_t;
 
 typedef struct {
     // Configuration
@@ -113,6 +125,7 @@ typedef struct {
     bool                dc_level;
     SemaphoreHandle_t   mutex;
     const uint8_t*      lut;
+    bool                use_10_byte_lut;
 } ssd1619_t;
 
 typedef enum {

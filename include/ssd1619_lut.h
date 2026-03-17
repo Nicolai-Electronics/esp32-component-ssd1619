@@ -12,11 +12,11 @@ extern "C" {
 
 #include "ssd1619.h"
 
-esp_err_t ssd1619_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_reset, int pin_busy);
+esp_err_t ssd1619_read_lut(int pin_data, int pin_clk, int pin_cs, int pin_dc, int pin_reset, int pin_busybool, bool* out_use_10_byte_lut);
 esp_err_t ssd1619_reset_lut();
 bool      ssd1619_get_lut_populated();
-esp_err_t ssd1619_get_lut(uint8_t temperature, uint8_t* target_buffer);
-esp_err_t ssd1619_apply_lut(ssd1619_t* handle, ssd1619_lut_t lut_type);
+esp_err_t ssd1619_get_lut(uint8_t temperature, uint8_t* target_buffer, bool* out_use_10_byte_lut);
+esp_err_t ssd1619_apply_lut(ssd1619_t* epaper, ssd1619_lut_t lut_type, uint8_t temperature);
 
 #ifdef __cplusplus
 }
